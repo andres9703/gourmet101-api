@@ -14,16 +14,21 @@ export class AuthController {
       loginUserDto.code,
       loginUserDto.code_verifier,
     );
-    console.log(result, 'result in the controller to set the cookie <--------');
     if (result.success) {
-      // Set a secure, HTTP-only cookie with the access_token
+      // Set access_token cookie
       res.cookie('auth_token', result.access_token, {
-        httpOnly: true, // Prevents client-side JavaScript access
-        secure: process.env.NODE_ENV === 'production' ? true : false, // Use secure cookies in production
-        sameSite: 'lax', // Helps prevent CSRF
-        maxAge: 3600000, // 1 hour in milliseconds
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production' ? true : false,
+        sameSite: 'lax',
+        maxAge: 10 * 60 * 60 * 1000, // 10 hours
       });
-      console.log('Cookie set: -------->', res.get('Set-Cookie'));
+      // Set refresh_token cookie
+      res.cookie('refresh_token', result.refresh_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production' ? true : false,
+        sameSite: 'lax',
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      });
       return res.status(200).json({ success: true });
     }
     return res
@@ -34,16 +39,45 @@ export class AuthController {
   @Get('status')
   async checkUserAuthentication(@Req() req: Request) {
     const accessToken = req.cookies['auth_token']; // Get the token from the cookie
-    console.log(
-      accessToken,
-      'access token in the controller from status <--------',
-    );
+
     return this.authService.checkUserAuthentication(accessToken);
+  }
+
+  @Post('refresh')
+  async refreshToken(@Req() req: Request, @Res() res: Response) {
+    const refreshToken = req.cookies['refresh_token'];
+    if (!refreshToken) {
+      return res
+        .status(401)
+        .json({ success: false, message: 'No refresh token provided' });
+    }
+    try {
+      const result = await this.authService.refreshAccessToken(refreshToken);
+      console.log('result from the refresh method in api <---------', result);
+      res.cookie('auth_token', result.access_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production' ? true : false,
+        sameSite: 'lax',
+        maxAge: 10 * 60 * 60 * 1000, // 10 hours
+      });
+      res.cookie('refresh_token', result.refresh_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production' ? true : false,
+        sameSite: 'lax',
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      });
+      return res.status(200).json({ success: true });
+    } catch (error) {
+      return res
+        .status(401)
+        .json({ success: false, message: 'Failed to refresh token' });
+    }
   }
 
   @Post('logout')
   async logout(@Res() res: Response) {
     res.clearCookie('auth_token'); // Clear the cookie
+    res.clearCookie('refresh_token'); // Clear the cookie
     return res.status(200).json({ success: true });
   }
 }

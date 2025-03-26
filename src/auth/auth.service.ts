@@ -1,9 +1,8 @@
 /* eslint-disable */
 import { HttpService } from '@nestjs/axios';
-import { HttpException, HttpStatus, Injectable, Res } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { AxiosError } from 'axios';
 import { catchError, firstValueFrom, map } from 'rxjs';
-import * as qs from 'qs';
 
 @Injectable()
 export class AuthService {
@@ -11,8 +10,6 @@ export class AuthService {
 
   async loginAuth0User(code: string, codeVerifier: string) {
     const url = `${process.env.AUTH0_DOMAIN}/oauth/token`;
-    console.log(code, '🐴🐴🐴🐴🐴🐴🐴🐴🐴🐴');
-    console.log(codeVerifier, '🐴🐴🐴🐴 Code Verifier');
 
     const options = {
       client_id: process.env.CLIENT_ID,
@@ -32,11 +29,14 @@ export class AuthService {
         })
         .pipe(
           map((response) => {
-            console.log(response.data, 'DATA INSIDE THE MAP <-----👍👍');
+            console.log(
+              'Login response from the auth0 server ⚡⚡ <-----',
+              response,
+            );
             return response.data;
           }),
           catchError((error: AxiosError) => {
-            console.log(error.response?.data, '👿👿👿👿 <-----');
+            console.log(error.response?.data, '🐞🐞 <-----');
             throw new HttpException(
               error.response?.data || 'AN ERROR OCCURRED <-------',
               error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
@@ -45,19 +45,62 @@ export class AuthService {
         ),
     );
 
-    console.log(
-      response,
-      'THIS IS THE DATA COMING FROM AUTH0 SERVER <-------👍👍',
+    return {
+      success: true,
+      access_token: response.access_token,
+      refresh_token: response.refresh_token,
+    };
+  }
+
+  async refreshAccessToken(refreshToken: string) {
+    const url = `${process.env.AUTH0_DOMAIN}/oauth/token`;
+    const options = {
+      grant_type: 'refresh_token',
+      client_id: process.env.CLIENT_ID,
+      client_secret: process.env.CLIENT_SECRET,
+      refresh_token: refreshToken,
+    };
+
+    const response = await firstValueFrom(
+      this.httpService
+        .post(url, options, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+        .pipe(
+          map((response) => {
+            console.log(
+              'Refresh response from the auth0 server 💫💫 <-----',
+              response,
+            );
+            return response.data;
+          }),
+          catchError((error: AxiosError) => {
+            console.log(error.response?.data, '👿👿👿👿 <-----');
+            throw new HttpException(
+              error.response?.data || 'Failed to refresh token',
+              error.response?.status || HttpStatus.UNAUTHORIZED,
+            );
+          }),
+        ),
     );
-    return { success: true, access_token: response.access_token }; // Return access_token
+
+    return {
+      access_token: response.access_token,
+      refresh_token: response.refresh_token || refreshToken, // Use new refresh_token if provided (rotation)
+    };
   }
 
   async checkUserAuthentication(accessToken: string) {
     if (!accessToken) {
       console.log('NO ACCESS TOKEN <-----');
-      return { isAuthenticated: false };
+      return {
+        isAuthenticated: false,
+        reason: 'No authentication token provided',
+      };
     }
-    console.log('continuoooooo <-------');
+
     const url = `${process.env.AUTH0_DOMAIN}/userinfo`;
     try {
       const response = await firstValueFrom(
@@ -74,9 +117,9 @@ export class AuthService {
             }),
           ),
       );
-      return { isAuthenticated: true, user: response };
+      return { isAuthenticated: true, user: response, reason: 'token valid' };
     } catch (error) {
-      return { isAuthenticated: false };
+      return { isAuthenticated: false, reason: error.message };
     }
   }
 }
