@@ -8,6 +8,7 @@ import { ConfigModule } from '@nestjs/config';
 import { FeedModule } from './feed/feed.module';
 import configuration from 'config/configuration';
 import { AuthService } from './auth/auth.service';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AuthService } from './auth/auth.service';
     }),
     FeedModule,
     AuthModule,
+    CloudinaryModule,
   ],
   controllers: [AppController],
   providers: [AppService, AuthService],
