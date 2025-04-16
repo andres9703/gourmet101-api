@@ -58,13 +58,15 @@ export class AuthController {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production' ? true : false,
         sameSite: 'lax',
-        maxAge: 10 * 60 * 60 * 1000, // 10 hours
+        // maxAge: 10 * 60 * 60 * 1000, // 10 hours
+        maxAge: 1 * 60 * 1000,
       });
       res.cookie('refresh_token', result.refresh_token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production' ? true : false,
         sameSite: 'lax',
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        // maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        maxAge: 5 * 60 * 1000,
       });
       return res.status(200).json({ success: true });
     } catch (error) {

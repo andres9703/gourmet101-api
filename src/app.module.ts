@@ -9,6 +9,7 @@ import { FeedModule } from './feed/feed.module';
 import configuration from 'config/configuration';
 import { AuthService } from './auth/auth.service';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { ProfileModule } from './profile/profile.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
     FeedModule,
     AuthModule,
     CloudinaryModule,
+    ProfileModule,
   ],
   controllers: [AppController],
   providers: [AppService, AuthService],
