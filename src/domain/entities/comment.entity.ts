@@ -14,10 +14,14 @@ export class Comment {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => User, (user) => user.comments)
+  @ManyToOne(() => User, (user) => user.comments, {
+    onDelete: 'CASCADE',
+  })
   user: User;
 
-  @ManyToOne(() => Experience, (experience) => experience.comments)
+  @ManyToOne(() => Experience, (experience) => experience.comments, {
+    onDelete: 'CASCADE',
+  })
   experience: Experience;
 
   @Column('text')

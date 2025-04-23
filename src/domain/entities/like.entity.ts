@@ -13,10 +13,14 @@ export class Like {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => User, (user) => user.likes)
+  @ManyToOne(() => User, (user) => user.likes, {
+    onDelete: 'CASCADE',
+  })
   user: User;
 
-  @ManyToOne(() => Experience, (experience) => experience.likes)
+  @ManyToOne(() => Experience, (experience) => experience.likes, {
+    onDelete: 'CASCADE',
+  })
   experience: Experience;
 
   @CreateDateColumn()

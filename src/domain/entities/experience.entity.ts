@@ -18,10 +18,14 @@ export class Experience {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => User, (user) => user.experiences)
+  @ManyToOne(() => User, (user) => user.experiences, {
+    onDelete: 'CASCADE',
+  })
   user: User;
 
-  @ManyToOne(() => Business, (business) => business.experiences)
+  @ManyToOne(() => Business, (business) => business.experiences, {
+    onDelete: 'CASCADE',
+  })
   business: Business;
 
   @Column()

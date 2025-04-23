@@ -13,7 +13,9 @@ export class BusinessImage {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Business, (business) => business.images)
+  @ManyToOne(() => Business, (business) => business.images, {
+    onDelete: 'CASCADE',
+  })
   business: Business;
 
   @Column('text')

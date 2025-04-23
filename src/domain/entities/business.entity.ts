@@ -20,7 +20,9 @@ export class Business {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => User, (user) => user.businesses)
+  @ManyToOne(() => User, (user) => user.businesses, {
+    onDelete: 'CASCADE',
+  })
   user: User;
 
   @Column()
