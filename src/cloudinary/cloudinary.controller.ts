@@ -16,7 +16,7 @@ export class CloudinaryController {
   constructor(private readonly cloudinaryService: CloudinaryService) {}
 
   @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('profilePicture'))
   uploadImage(
     @UploadedFile(
       new ParseFilePipe({
@@ -28,6 +28,6 @@ export class CloudinaryController {
     )
     file: Express.Multer.File,
   ) {
-    return this.cloudinaryService.uploadFile(file);
+    return this.cloudinaryService.uploadImageToCloudinary(file);
   }
 }

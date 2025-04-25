@@ -2,17 +2,21 @@
 import {
   Body,
   Controller,
+  FileTypeValidator,
   Get,
+  MaxFileSizeValidator,
   Param,
+  ParseFilePipe,
   Patch,
   Post,
-  Put,
-  Req,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { GourmetUser } from 'src/domain/interfaces/gourmet-user.interface';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { UpdateGourmetUserDto } from './dto/update-user.dto';
 
 @Controller('users')
 export class UserController {
@@ -25,15 +29,11 @@ export class UserController {
   }
   @UseGuards(AuthGuard)
   @Get(':id')
-  async findOne(@Param('id') id: string, @Req() req: Request) {
+  async findOne(@Param('id') id: string) {
     return await this.userService.findOne(id);
   }
 
-  // @Get(':id/:postId')
-  // async findOnePost(@Param('id') id: string, @Param('postId') postId: string) {
-  //   return { value: 'this is working with id' + id + 'and' + postId };
-  // }
-
+  @UseGuards(AuthGuard)
   @Post()
   async create(@Body() body: { sub: string }) {
     return this.userService.create(body.sub);
@@ -41,7 +41,22 @@ export class UserController {
 
   @UseGuards(AuthGuard)
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() body: GourmetUser) {
-    return this.userService.update(id, body);
+  @UseInterceptors(FileInterceptor('profilePicture'))
+  async update(
+    @Param('id') id: string,
+    @Body()
+    dto: UpdateGourmetUserDto,
+    @UploadedFile(
+      new ParseFilePipe({
+        fileIsRequired: false,
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 1024 * 1024 * 4 }),
+          new FileTypeValidator({ fileType: '.(png|jpeg|jpg)' }),
+        ],
+      }),
+    )
+    file?: Express.Multer.File,
+  ) {
+    return this.userService.update(id, dto, file);
   }
 }

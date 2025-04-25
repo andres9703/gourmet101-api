@@ -8,13 +8,19 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from 'src/domain/entities/user.entity';
 import type { UserEntityMapped } from 'src/domain/types/user-entity-mapped.type';
-import { GourmetUser } from 'src/domain/interfaces/gourmet-user.interface';
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryUploadResponse } from 'src/cloudinary/interfaces/cloudinary-response.interface';
+import { UpdateGourmetUserDto } from './dto/update-user.dto';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
+
+const streamifier = require('streamifier');
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
   async findAll() {
     try {
@@ -50,20 +56,29 @@ export class UserService {
     }
   }
 
-  async update(id: string, body: GourmetUser) {
+  async update(
+    id: string,
+    dto: UpdateGourmetUserDto,
+    file?: Express.Multer.File,
+  ) {
     try {
-      await this.userRepository.update(id, body);
+      console.log({ id, dto, file }, 'SEEING THE DATA');
+      const user = await this.userRepository.findOne({ where: { id } });
+      if (!user) throw new NotFoundException(`User ${id} not found`);
 
-      const updatedUser = await this.userRepository.findOne({ where: { id } });
-
-      if (!updatedUser) {
-        throw new NotFoundException(`User with ID ${id} not found`);
+      if (file) {
+        const { secure_url } =
+          await this.cloudinaryService.uploadImageToCloudinary(file);
+        user.profilePicture = secure_url;
       }
 
-      return {
-        updatedAt: updatedUser.updatedAt,
-        id: updatedUser.id,
-      };
+      Object.assign(user, dto);
+      const updated = await this.userRepository.save(user);
+
+      const { createdAt, updatedAt, ...userUpdated } = updated;
+
+      return userUpdated;
+      
     } catch (error) {
       // Better error handling with proper HTTP exceptions
       if (error instanceof NotFoundException) {
