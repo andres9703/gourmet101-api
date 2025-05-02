@@ -17,7 +17,14 @@ import { UserService } from './user.service';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateGourmetUserDto } from './dto/update-user.dto';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+} from '@nestjs/swagger';
 
+@ApiTags('Users')
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -33,6 +40,8 @@ export class UserController {
     return await this.userService.findOne(id);
   }
 
+  @ApiOperation({ summary: 'Create user' })
+  @ApiResponse({ status: 201, description: 'User created' })
   @UseGuards(AuthGuard)
   @Post()
   async create(@Body() body: { sub: string }) {

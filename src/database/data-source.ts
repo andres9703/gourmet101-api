@@ -15,11 +15,7 @@ import { Like } from '../domain/entities/like.entity';
 
 dotenv.config();
 
-// Log to verify
-
 const dbUri = process.env.DATABASE_URL;
-
-console.log('DATABASE_URL:', dbUri, '👌👌👌');
 
 export const AppDataSource = new DataSource({
   type: 'postgres',

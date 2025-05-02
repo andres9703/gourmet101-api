@@ -8,12 +8,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from 'src/domain/entities/user.entity';
 import type { UserEntityMapped } from 'src/domain/types/user-entity-mapped.type';
-import { v2 as cloudinary } from 'cloudinary';
-import { CloudinaryUploadResponse } from 'src/cloudinary/interfaces/cloudinary-response.interface';
 import { UpdateGourmetUserDto } from './dto/update-user.dto';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
-
-const streamifier = require('streamifier');
 
 @Injectable()
 export class UserService {
@@ -78,7 +74,6 @@ export class UserService {
       const { createdAt, updatedAt, ...userUpdated } = updated;
 
       return userUpdated;
-      
     } catch (error) {
       // Better error handling with proper HTTP exceptions
       if (error instanceof NotFoundException) {
